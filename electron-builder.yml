@@ -1,0 +1,26 @@
+appId: vn.dainam.valtec-tts-studio
+productName: Valtec TTS Studio
+directories:
+  output: release
+  buildResources: resources
+files:
+  - dist/**
+  - dist-electron/**
+  - package.json
+extraResources:
+  - from: resources/valtec
+    to: valtec
+asarUnpack:
+  - node_modules/onnxruntime-node/**
+mac:
+  target: [dmg, zip]
+  category: public.app-category.utilities
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: portable
+      arch: [x64]
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
