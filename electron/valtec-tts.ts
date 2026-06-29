@@ -428,11 +428,13 @@ export async function runValtec(
     const decOut = await sessions.decoderSession!.run({ z, g });
     const audioData = decOut['audio'].data as Float32Array;
 
-    // 11. Convert float32 → int16 PCM Buffer (giống Piper output format)
-    const int16 = new Int16Array(audioData.length);
+    // 11. Convert float32 → int16 PCM + trailing silence 200ms
+    const trailingSamples = Math.round(sampleRate * 0.2);
+    const int16 = new Int16Array(audioData.length + trailingSamples);
     for (let i = 0; i < audioData.length; i++) {
       int16[i] = Math.max(-32768, Math.min(32767, Math.round(audioData[i] * 32767)));
     }
+    // trailing silence đã là 0 do Int16Array zero-initialized
 
     return {
       ok: true,
@@ -460,7 +462,7 @@ export async function warmupValtec(speakerId: string, modelDir: string): Promise
 
 export function normalizeText(text: string): string {
   if (!text) return '';
-  let normalized = text.toLowerCase();
+  let normalized = text.normalize('NFC').toLowerCase();
 
   // 1. Chuẩn hóa ngày tháng (Ví dụ: 28/06/2026 hoặc 28/06)
   normalized = normalizeDates(normalized);
@@ -486,7 +488,7 @@ export function normalizeText(text: string): string {
   };
 
   normalized = normalized.split(/\s+/).map(word => {
-    const cleanWord = word.replace(/[,.!?;:'"()]/g, '');
+    const cleanWord = word.replace(/[,.!?;:'"()\[\]{}]/g, '');
     const replacement = abbrevs[cleanWord];
     if (replacement) {
       return word.replace(cleanWord, replacement);
